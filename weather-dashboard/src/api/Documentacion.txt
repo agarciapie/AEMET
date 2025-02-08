@@ -1,0 +1,16 @@
+weather-dashboard/
+├── src/
+│   ├── api/
+│   │   └── weather_data.py    # AEMET API client
+│   ├── utils/
+│   │   └── helpers.py         # Utility functions
+│   ├── components/
+│   │   └── maps.py           # Map visualization
+│   └── app.py                # Main application
+└── requirements.txt          # Dependencies
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the application
+streamlit run src/app.py
