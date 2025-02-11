@@ -31,7 +31,7 @@ def load_stations():
     return weather.get_stations()
 
 # Main app
-st.title("🌤️ Estaciones metereológicas en España")
+st.title("🌤️ Estaciones meteorológicas en España")
 
 try:
     # Load and format data
@@ -50,7 +50,16 @@ try:
         else:
             filtered_df = df
 
-        # Update map with filtered data
+        # Add metrics
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Estaciones", len(filtered_df))
+        with col2:
+            st.metric("Provincias", len(filtered_df['provincia'].unique()))
+        with col3:
+            st.metric("Altitud Media", f"{filtered_df['altitud'].mean():.0f}m")
+
+        # Create map
         fig = px.scatter_map(
             filtered_df,
             lat='latitud',
@@ -76,39 +85,25 @@ try:
                 center=dict(lat=40.4168, lon=-3.7038)
             )
         )
-        
+
         # Display map
         st.plotly_chart(fig, use_container_width=True)
-        
-        # Add metrics above the map
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Total Estaciones", len(filtered_df))
-        with col2:
-            st.metric("Provincias", len(filtered_df['provincia'].unique()))
-        with col3:
-            st.metric("Altitud Media", f"{filtered_df['altitud'].mean():.0f}m")
-        
-        # Add station selector
-        st.sidebar.subheader("Seleccionar Estación")
+
+        # Station selector
         selected_station = st.sidebar.selectbox(
             "Estación Meteorológica",
             options=filtered_df['nombre'].unique(),
             format_func=lambda x: f"{x} ({filtered_df[filtered_df['nombre']==x]['provincia'].iloc[0]})"
         )
-        
-        # Show station weather data
+
+        # Display station data
         if selected_station:
             st.subheader(f"Datos Meteorológicos - {selected_station}")
-            station_id = df[df['nombre'] == selected_station]['indicativo'].iloc[0]
-            weather_data = get_station_weather(API_KEY, station_id)
-            display_station_weather(df[df['nombre'] == selected_station].iloc[0], weather_data)
-        
-        # Show data table
-        st.subheader("Informacion Estaciones metereológicas")
-        st.dataframe(df)
-        
-        # Add download button for data
+            station_data = filtered_df[filtered_df['nombre'] == selected_station].iloc[0]
+            weather_data = get_station_weather(API_KEY, station_data['indicativo'])
+            display_station_weather(station_data, weather_data)
+
+        # Add download button
         csv = filtered_df.to_csv(index=False).encode('utf-8')
         st.sidebar.download_button(
             "Descargar Datos (CSV)",
@@ -117,9 +112,9 @@ try:
             "text/csv",
             key='download-csv'
         )
-        
+
     else:
-        st.error("No data available")
-        
+        st.error("No hay datos disponibles")
+
 except Exception as e:
     st.error(f"Error: {str(e)}")
